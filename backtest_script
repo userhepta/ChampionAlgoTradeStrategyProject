@@ -2,7 +2,34 @@ import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
+import statistics
+
 from datetime import timedelta, time
 from scipy import stats
 from math import sqrt, isnan, isinf
-from typing import Dict
+from typing import Dict, List, Optional
+from sigfig import round as sf
+from loguru import logger 
+
+MODEL_DICT: Dict = {
+    'z': 'z-score',
+    'rbz': 'robust z-score',
+    'mean': 'mean normalization',
+    'rsi': 'relative strength index',
+    'rb': 'robust scaling',
+    'mm': 'min max scaling',
+    'pctl': 'percentile'
+} 
+
+def rolling_mad_numba(arr, window, min_periods):
+    n = len(arr)
+    out = np.full(n, np.nan)
+
+    for i in range(n):
+        start = max(0, i - window + 1)
+        window_data = arr[start:i + 1]
+        # Drop NaNs
+        window_data = window_data[~np.isnan(window_data)]
+
+        if
