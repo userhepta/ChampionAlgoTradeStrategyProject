@@ -32,4 +32,45 @@ def rolling_mad_numba(arr, window, min_periods):
         # Drop NaNs
         window_data = window_data[~np.isnan(window_data)]
 
-        if
+        if len(window_data) >= min_periods:
+            med = np.median(window_data)
+            mad = np.median(np.abs(window_data - med))
+            out[i] = mad
+    return out
+def rolling_mad(series, window, min_periods=None):
+    if min_periods is None:
+        min_periods = window
+    arr = series.to_numpy(dtype=np.float64)
+    return pd.Series(
+        rolling_mad_numba(arr, window, min_periods),
+        index=series.index
+    )
+
+def create_normalize_df(backtest_df, method ='z', look_back_period = 50, volatility_filter ='hv'):
+
+    df = pd.DataFrame()
+    if method == 'z':
+        df['rolling_mean'] = backtest_df['close'].rolling(look_back_period).mean()
+        df['rolling_std'] = backtest_df['close'].rolling(look_back_period).std()
+        df['signal'] = (backtest_df['close'] - df['rolling_mean']) / df['rolling_std']
+
+    elif method == 'rbz':
+        df['rolling_median'] = backtest_df['close'].rolling(look_back_period).median()
+        df['median_abs_deviation'] = rolling_mad(backtest_df['close'], window=look_back_period)
+
+    elif method == 'mean':
+        df['rolling_mean'] = backtest_df['close'].rolling(look_back_period).mean()
+        df['rolling_max'] = backtest_df['close'].rolling(look_back_period).max()
+        df['rolling_min'] = backtest_df['close'].rolling(look_back_period).min()
+        df['signal'] = (backtest_df['close'] - df['rolling_mean']) / (df['rolling_max'] - df['rolling_min'])
+
+    elif method == 'rb':
+        df['rolling_median'] = backtest_df['close'].rolling(look_back_period).median()
+        df['rolling_25_%ile'] = backtest_df['close'].rolling(look_back_period).quantile(0.25)
+        df['rolling_75_%ile'] = backtest_df['close'].rolling(look_back_period).quantile(0.75)
+        df['rolling_iqr'] = df['rolling_75_%ile'] - df['rolling_25_%ile']  # interquartile range
+        df['signal'] = (backtest_df['close'] - df['rolling_median']) / df['rolling_iqr']
+
+    elif method == 'pctl':
+        df['signal'] = backtest_df['close'].rolling(look_back_period).apply(
+            lambda x: stats.percentileofscore(x, x[-1], kind='mean'), raw=True) / 100
