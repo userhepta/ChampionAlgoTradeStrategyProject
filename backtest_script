@@ -74,3 +74,29 @@ def create_normalize_df(backtest_df, method ='z', look_back_period = 50, volatil
     elif method == 'pctl':
         df['signal'] = backtest_df['close'].rolling(look_back_period).apply(
             lambda x: stats.percentileofscore(x, x[-1], kind='mean'), raw=True) / 100
+
+    else:
+        logger.error(f'normalization method error, model name = {method}')
+
+    # add volatility filter
+    if volatility_filter == 'hv':
+        df['rolling_hv'] = compute_hv(backtest_df['close'], look_back_period)
+        df['signal'] = df['signal'] * df['rolling_hv']
+
+    # fill NaN and inf value to be 0, happen if max & min / iqr are same
+    df['signal'] = df['signal'].fillna(0)
+    df['signal'] = df['signal'].replace([np.inf, -np.inf], 0)
+
+    # drop all NaN value (only ema and rsi does not have Nan value)
+    if method != 'ema' or method != 'rsi':
+        df = df.drop(df.index[:look_back_period - 1])
+
+    # check if any Nan error
+    while isnan(df['signal'].mean()) == True:
+        look_back_period = look_back_period + 1
+        logger.error('signal mean = NaN, look back period + 1 = {}', look_back_period)
+        return create_normalize_df(backtest_df, method, look_back_period, volatility_filter)
+
+    # check if any inf error
+    while isinf(df['signal'].mean()) == True:
+        look_back_period = look_back_period + 1
