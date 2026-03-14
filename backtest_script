@@ -100,3 +100,23 @@ def create_normalize_df(backtest_df, method ='z', look_back_period = 50, volatil
     # check if any inf error
     while isinf(df['signal'].mean()) == True:
         look_back_period = look_back_period + 1
+        logger.error('signal mean = inf, look back period + 1 = {}', look_back_period)
+        return create_normalize_df(backtest_df, method, look_back_period, volatility_filter)
+
+    # check if any quantile error
+    while df['signal'].mean() == df['signal'].quantile(0.975):
+        while df['signal'].mean() == df['signal'].quantile(0.025):
+            look_back_period = look_back_period + 1
+            logger.error('signal mean = quantile, look back period + 1 = {}', look_back_period)
+            return create_normalize_df(backtest_df, method, look_back_period, volatility_filter)
+
+    normalized_df = backtest_df.join(df['signal'])
+    return normalized_df
+
+
+def compute_hv(price_series: pd.Series, look_back_period : int = 50):
+    """
+    Returns a pd.Series with the historical volatility.
+    """
+    df = pd.DataFrame()
+    df['log_return'] = np.log() #todo this line is not finish yet
