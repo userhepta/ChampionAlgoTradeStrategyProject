@@ -113,10 +113,45 @@ def create_normalize_df(backtest_df, method ='z', look_back_period = 50, volatil
     normalized_df = backtest_df.join(df['signal'])
     return normalized_df
 
-
 def compute_hv(price_series: pd.Series, look_back_period : int = 50):
     """
     Returns a pd.Series with the historical volatility.
     """
     df = pd.DataFrame()
-    df['log_return'] = np.log() #todo this line is not finish yet
+    df['log_return'] = np.log(price_series / price_series.shift(1))
+    df['rolling_hv'] = df['log_return'].rolling(look_back_period).std()
+
+    return df['rolling_hv']
+
+def compute_rsi(prices, period=14):
+    """
+    Compute RSI exactly like TradingView, Bloomberg, and most brokers.
+    Uses Wilder's RMA (Recursive Moving Average) for smoothing.
+
+    Parameters
+    ----------
+    prices : list, np.array, or pd.Series
+        Closing prices.
+    period : int, optional
+        RSI period length (default is 14).
+
+    Returns
+    -------
+    pd.Series
+        RSI values, same length as input, with NaN for initial periods.
+    """
+    prices = pd.Series(prices).astype(float)
+
+    # Price changes
+    delta = prices.diff()
+
+    # Gains (gain) and losses (loss)
+    gain = np.where(delta > 0, delta, 0.0)
+    loss = np.where(delta < 0, -delta, 0.0)
+
+    # Convert to Series
+    gain = pd.Series(gain, index=prices.index)
+    loss = pd.Series(loss, index=prices.index)
+
+    # Wilder's RMA (same as TradingView's ta.rma)
+    def rma(x, n):
