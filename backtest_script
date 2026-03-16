@@ -155,3 +155,7 @@ def compute_rsi(prices, period=14):
 
     # Wilder's RMA (same as TradingView's ta.rma)
     def rma(x, n):
+        return x.ewm(alpha=1/n, adjust=False).mean()
+
+    avg_gain = rma(gain, period)
+    avg_loss = rma(loss, period)
