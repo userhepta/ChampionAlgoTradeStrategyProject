@@ -159,3 +159,10 @@ def compute_rsi(prices, period=14):
 
     avg_gain = rma(gain, period)
     avg_loss = rma(loss, period)
+
+    rs = avg_gain / avg_loss
+    rsi = 100 - (100 / (1 + rs))
+
+    return rsi
+
+def plot_pre_post_hr_df(hour_before=2, hour_after=2):
