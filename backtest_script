@@ -171,4 +171,8 @@ def plot_pre_post_hr_df(hour_before=2, hour_after=2):
 
     segments = []
     for ts in df_joined.index[df_joined['is_announ']]:
-        seg = df_joined.loc[ts - pd.Timedelta(minutes=minutes_before): ts + pd.Timedelta(minutes=
+        seg = df_joined.loc[ts - pd.Timedelta(minutes=minutes_before): ts + pd.Timedelta(minutes=minutes_after),
+              'close']
+        if len(seg) == minutes_before + 1 + minutes_after:  # 120 before + event + 120 after
+            # Normalise to start at 0% change
+            seg_norm = (seg / seg.iloc[0]
