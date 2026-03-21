@@ -175,4 +175,5 @@ def plot_pre_post_hr_df(hour_before=2, hour_after=2):
               'close']
         if len(seg) == minutes_before + 1 + minutes_after:  # 120 before + event + 120 after
             # Normalise to start at 0% change
-            seg_norm = (seg / seg.iloc[0]
+            seg_norm = (seg / seg.iloc[0] - 1) * 100
+            seg_norm.index = range(-minutes_before, minutes_after
