@@ -186,4 +186,5 @@ def plot_pre_post_hr_df(hour_before=2, hour_after=2):
     for seg in segments:
         plt.plot(seg.index, seg.values, alpha=0.5)
 
-    plt.title(f"XAUUSD — {hour_before} Hours Before to {hour_after} Hours After
+    plt.title(f"XAUUSD — {hour_before} Hours Before to {hour_after} Hours After Each Announcement (Normalised)")
+    plt.xlabel(
