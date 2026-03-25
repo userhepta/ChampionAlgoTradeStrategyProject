@@ -71,6 +71,14 @@ def create_normalize_df(backtest_df, method ='z', look_back_period = 50, volatil
         df['rolling_iqr'] = df['rolling_75_%ile'] - df['rolling_25_%ile']  # interquartile range
         df['signal'] = (backtest_df['close'] - df['rolling_median']) / df['rolling_iqr']
 
+    elif method == 'rsi':
+        df['signal'] = compute_rsi(backtest_df['close'], look_back_period)
+
+    elif method == 'mm':
+        df['rolling_max'] = backtest_df['close'].rolling(look_back_period).max()
+        df['rolling_min'] = backtest_df['close'].rolling(look_back_period).min()
+        df['signal'] = (backtest_df['close'] - df['rolling_min']) / (df['rolling_max'] - df['rolling_min'])
+
     elif method == 'pctl':
         df['signal'] = backtest_df['close'].rolling(look_back_period).apply(
             lambda x: stats.percentileofscore(x, x[-1], kind='mean'), raw=True) / 100
