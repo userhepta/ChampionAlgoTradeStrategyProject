@@ -205,4 +205,11 @@ def plot_pre_post_hr_df(hour_before=2, hour_after=2):
 
 def filter_pre_post_hr_to_backtest_df(df_joined, hour_before=2, hour_after=2):
     minutes_before = round(hour_before * 60)
-    minutes_after = round(
+    minutes_after = round(hour_after * 60)
+
+    keep_idx = []  # list to collect all timestamps we want to keep
+
+    for ts in df_joined.index[df_joined['is_announ']]:
+        # Build the ±2 hour window
+        window_idx = df_joined.loc[
+                     ts - 
