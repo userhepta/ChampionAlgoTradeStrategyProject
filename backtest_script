@@ -57,6 +57,7 @@ def create_normalize_df(backtest_df, method ='z', look_back_period = 50, volatil
     elif method == 'rbz':
         df['rolling_median'] = backtest_df['close'].rolling(look_back_period).median()
         df['median_abs_deviation'] = rolling_mad(backtest_df['close'], window=look_back_period)
+        df['signal'] = 0.6745 * (backtest_df['close'] - df['rolling_median']) / df['median_abs_deviation']
 
     elif method == 'mean':
         df['rolling_mean'] = backtest_df['close'].rolling(look_back_period).mean()
