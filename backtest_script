@@ -212,4 +212,4 @@ def filter_pre_post_hr_to_backtest_df(df_joined, hour_before=2, hour_after=2):
     for ts in df_joined.index[df_joined['is_announ']]:
         # Build the ±2 hour window
         window_idx = df_joined.loc[
-                     ts - 
+                     ts - pd.Timedelta(minutes=minutes_before): ts + pd.Timedelta(
