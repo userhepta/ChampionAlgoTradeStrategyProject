@@ -213,4 +213,24 @@ def filter_pre_post_hr_to_backtest_df(df_joined, hour_before=2, hour_after=2):
     for ts in df_joined.index[df_joined['is_announ']]:
         # Build the ±2 hour window
         window_idx = df_joined.loc[
-                     ts - pd.Timedelta(minutes=minutes_before): ts + pd.Timedelta(
+                     ts - pd.Timedelta(minutes=minutes_before): ts + pd.Timedelta(minutes=minutes_after)
+                     ].index
+        keep_idx.extend(window_idx)
+
+    # Drop duplicates and sort
+    keep_idx = sorted(set(keep_idx))
+
+    # Filter the DataFrame
+    df_filtered = df_joined.loc[keep_idx]
+
+    backtest_df = df_filtered[['is_announ', 'close', 'return', 'pct_since_announ', 'min_since_announ', 'min_before_announ', 'event_id']].copy()
+
+    return backtest_df
+
+
+def print_pre_post_1_hr_stats():
+    announcements = df_joined.index[df_joined['is_announ']]
+    pre_change_list = []
+    post_change_list = []
+    for ts in announcements[-12:]:
+        pre_window = df_xau_raw
