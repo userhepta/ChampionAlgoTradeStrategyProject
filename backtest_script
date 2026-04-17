@@ -238,4 +238,5 @@ def print_pre_post_1_hr_stats():
         pre_change_list.append(move)
 
         # Slice from the announcement time to 60 minutes after
-        post_window
+        post_window = df_xau_raw.loc[ts: ts + pd.Timedelta(minutes=60)]
+        move = (post_window
