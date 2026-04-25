@@ -241,3 +241,10 @@ def print_pre_post_1_hr_stats():
         post_window = df_xau_raw.loc[ts: ts + pd.Timedelta(minutes=60)]
         move = (post_window['close'].iloc[-1] / post_window['close'].iloc[0] - 1) * 100
         post_change_list.append(move)
+
+    nums = np.array(pre_change_list)
+    pre_change_list = np.abs(nums)
+    mean_value = statistics.mean(pre_change_list)  # Average
+    median_value = statistics.median(pre_change_list)  # Middle value
+    mode_value = statistics.mode(pre_change_list)  # Most common value
+    print(f"pre 1 hour abs pct: mean = {mean_value:.2F}%, mode = {mode_value:.2F}%, median
