@@ -247,4 +247,99 @@ def print_pre_post_1_hr_stats():
     mean_value = statistics.mean(pre_change_list)  # Average
     median_value = statistics.median(pre_change_list)  # Middle value
     mode_value = statistics.mode(pre_change_list)  # Most common value
-    print(f"pre 1 hour abs pct: mean = {mean_value:.2F}%, mode = {mode_value:.2F}%, median
+    print(f"pre 1 hour abs pct: mean = {mean_value:.2F}%, mode = {mode_value:.2F}%, median = {median_value:.2F}%")
+
+    nums = np.array(post_change_list)
+    post_change_list = np.abs(nums)
+    mean_value = statistics.mean(post_change_list)  # Average
+    median_value = statistics.median(post_change_list)  # Middle value
+    mode_value = statistics.mode(post_change_list)  # Most common value
+    print(f"post 1 hour abs pct: mean = {mean_value:.2F}%, mode = {mode_value:.2F}%, median = {median_value:.2F}%")
+
+def create_x_min_since_abs_pct_dict(quantile = 0.5, minutes_after=240):
+
+    segments = []
+    for ts in df_joined.index[df_joined['is_announ']]:
+        # Slice from the announcement to +N minutes after
+        seg = df_joined.loc[ts: ts + pd.Timedelta(minutes=minutes_after), 'close']
+
+        # Only keep full-length segments (event + after minutes)
+        if len(seg) == minutes_after + 1:
+            # Normalise to % change from announcement price
+            seg_norm = (seg / seg.iloc[0] - 1)
+            seg_norm.index = range(0, minutes_after + 1)  # minutes after announcement
+            segments.append(seg_norm)
+
+    # Combine into one DataFrame
+    df_segments = pd.concat(segments, axis=1)
+
+    # Example: median absolute % change for each minute after announcement
+
+    median_abs_pct = df_segments.abs().quantile(q= quantile, axis=1)
+    mean_abs_pct = df_segments.abs().mean(axis=1)
+    median_abs_dict = median_abs_pct.round(6).to_dict()
+    mean_abs_dict = mean_abs_pct.round(6).to_dict()
+    median_abs_dict.pop(0)
+    mean_abs_dict.pop(0)
+
+    return median_abs_dict, mean_abs_dict
+
+def backtest_time_bound(is_announ_close_signal_return_df,
+                        time_bound=10,
+                        long_short=1,
+                        is_long_ex_mid=False,
+                        is_stop_loss = False,
+                        middle_signal=0,
+                        unit_tc=0.004):
+
+    df = is_announ_close_signal_return_df.copy()
+    if is_long_ex_mid:
+        df['position'] = np.where(df['is_announ'] == False, np.nan, np.where(df['signal'] > middle_signal, 1, -1))  # time stop (long exceeding mid)
+    else:  # short ex mid
+        df['position'] = np.where(df['is_announ'] == False, np.nan, np.where(df['signal'] > middle_signal, -1, 1))  # time stop (short exceeding mid)
+
+    # long only position
+    if long_short == 1:
+        df['long_position'] = np.where(df['position'] == 1, 1, 0)
+        df['long_position'] = np.where(df['position'] == 1, 1, np.where(df['position'].shift(time_bound - 1) == 1, 1,
+                                                                        np.where(df['position'].shift(time_bound) == 1, 0, np.nan)))
+        df['long_position'] = df['long_position'].ffill()
+        df['long_position'] = df['long_position'].fillna(0)
+
+        if is_stop_loss:
+            df['abs_pct_x_min_since'] = df['min_since_announ'].map(lambda x: mean_abs_pct_dict.get(x, 0))
+            df['stop_loss'] = np.where(-df['pct_since_announ'] > df['abs_pct_x_min_since'], True, np.where(df["is_announ"] == True, False, np.nan))
+            df['stop_loss'] = df['stop_loss'].ffill()
+            df['long_position'] = np.where(df['stop_loss'] == True, 0 , df['long_position'])
+
+        df['long_transaction_cost'] = abs(df['long_position'] - df['long_position'].shift(1)) * unit_tc
+        df['long_pnl'] = (df['long_position'].shift(1) * df['return'] - df['long_transaction_cost'])
+        df['long_cpnl'] = df['long_pnl'].cumsum()
+        df['net_long_pnl'] = df['long_position'].shift(1) * df['return']
+        df['net_long_cpnl'] = df['net_long_pnl'].cumsum()
+
+        df['pnl'] = df['long_pnl'].copy()
+        df['net_pnl'] = df['net_long_pnl'].copy()
+        df['transaction_cost'] = df['long_transaction_cost'].copy()
+        df['position'] = df['long_position'].copy()
+
+
+    # short only position
+    elif long_short == -1:
+        df['short_position'] = np.where(df['position'] == -1, -1, 0)
+        df['short_position'] = np.where(df['position'] == -1, -1, np.where(df['position'].shift(time_bound - 1) == -1, -1,
+                                                 np.where(df['position'].shift(time_bound) == -1, 0, np.nan)))
+        df['short_position'] = df['short_position'].ffill()
+        df['short_position'] = df['short_position'].fillna(0)
+
+        if is_stop_loss:
+            df['abs_pct_x_min_since'] = df['min_since_announ'].map(lambda x: mean_abs_pct_dict.get(x, 0))
+            df['stop_loss'] = np.where(df['pct_since_announ'] > df['abs_pct_x_min_since'], True, np.where(df["is_announ"] == True, False, np.nan))
+            df['stop_loss'] = df['stop_loss'].ffill()
+            df['short_position'] = np.where(df['stop_loss'] == True, 0 , df['short_position'])
+
+        df['short_transaction_cost'] = abs(df['short_position'] - df['short_position'].shift(1)) * unit_tc
+        df['short_pnl'] = (df['short_position'].shift(1) * df['return'] - df['short_transaction_cost'])
+        df['short_cpnl'] = df['short_pnl'].cumsum()
+        df['net_short_pnl'] = df['short_position'].shift(1) * df['return']
+
