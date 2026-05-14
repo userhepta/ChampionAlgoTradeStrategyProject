@@ -342,4 +342,68 @@ def backtest_time_bound(is_announ_close_signal_return_df,
         df['short_pnl'] = (df['short_position'].shift(1) * df['return'] - df['short_transaction_cost'])
         df['short_cpnl'] = df['short_pnl'].cumsum()
         df['net_short_pnl'] = df['short_position'].shift(1) * df['return']
+        df['net_short_cpnl'] = df['net_short_pnl'].cumsum()
 
+        df['pnl'] = df['short_pnl'].copy()
+        df['net_pnl'] = df['net_short_pnl'].copy()
+        df['transaction_cost'] = df['short_transaction_cost'].copy()
+        df['position'] = df['short_position'].copy()
+
+    else:
+        logger.error('long short attribute error, long_short = {}', long_short)
+
+    df['cumulative_net_pnl'] = df['net_pnl'].cumsum()
+    df['cumulative_pnl'] = df['pnl'].cumsum()
+
+
+    event_pnl = df.groupby('event_id')['pnl'].sum()
+    win_rate = float(round((event_pnl > 0).mean(),4))
+    loss_rate = float(round((event_pnl < 0).mean(), 4))
+    real_win_rate = round(win_rate / (win_rate+loss_rate) if win_rate+loss_rate != 0 else np.inf, 4)
+    real_loss_rate = round(loss_rate / (win_rate+loss_rate) if win_rate+loss_rate != 0 else np.inf, 4)
+
+    # Expectancy (average PnL per event, accounting for wins/losses)
+    avg_win = float(round(event_pnl[event_pnl > 0].mean(),4))
+    avg_loss = float(round(event_pnl[event_pnl < 0].mean(),4))
+
+    avg_return = float(round(event_pnl[event_pnl!=0].mean(),4))
+    median_return = float(round(event_pnl[event_pnl!=0].median(),4))
+    q75_return = float(round(event_pnl[event_pnl!=0].quantile(0.75),4))
+    q25_return = float(round(event_pnl[event_pnl!=0].quantile(0.25),4))
+
+    gross_profit = float(round(event_pnl[event_pnl > 0].sum(),4))
+    gross_loss = float(round(-event_pnl[event_pnl < 0].sum(),4))
+    profit_factor = float(round(gross_profit / gross_loss if gross_loss != 0 else np.inf,4))
+
+    max_event_pnl = float(round(event_pnl.max(),4))
+    min_event_pnl = float(round(event_pnl.min(),4))
+    pnl_max_to_min = round(max_event_pnl / -min_event_pnl if min_event_pnl != 0 else np.inf, 4)
+
+    metric = round(avg_return*profit_factor, 4)
+
+    result_dict = {
+        "win_rate": real_win_rate,
+        "loss_rate": real_loss_rate,
+        "avg_win": avg_win,
+        "avg_loss": -avg_loss,
+        "avg_return": avg_return,
+        "median_return": median_return,
+        "q25_return": q25_return,
+        "q75_return": q75_return,
+        "gross_profit": gross_profit,
+        "gross_loss": gross_loss,
+        "profit_factor": profit_factor,
+        "max_event_pnl": max_event_pnl,
+        "min_event_pnl": min_event_pnl,
+        "pnl_max_to_min": pnl_max_to_min,
+        "metric": metric
+    }
+
+    return result_dict, df
+
+def create_time_stop_lookback_entry_optimization_df(backtest_df,
+                                                    lookback_range=[2, 122],
+                                                    time_stop_range=[2, 42],
+                                                    long_short=1,
+                                                    is_long_ex_mid = False,
+                                                    middle_signal = None,
