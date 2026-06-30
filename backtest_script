@@ -407,3 +407,50 @@ def create_time_stop_lookback_entry_optimization_df(backtest_df,
                                                     long_short=1,
                                                     is_long_ex_mid = False,
                                                     middle_signal = None,
+                                                    is_stop_loss = False,
+                                                    method='z',
+                                                    volatility_filter=None,
+                                                    unit_tc=0.004):
+
+    # init
+    result_list: List[Dict[str, Optional[float]]] = []
+
+    if long_short == 0:
+        logger.error('long_short could not be 0')
+        return
+
+    time_stop_start: float = time_stop_range[0]
+    time_stop_end: float = time_stop_range[1] + 1
+    time_stop_step: float = int((time_stop_end - 1 - time_stop_start) / 20)
+    array = np.arange(time_stop_start, time_stop_end, time_stop_step)
+
+    for time_bound in array:
+        LB_start: float = lookback_range[0]
+        LB_end: float = lookback_range[1] + 1
+        LB_step: float = int((LB_end - 1 - LB_start) / 20)
+        array = np.arange(LB_start, LB_end, LB_step)
+        for look_back_period in array:
+            normalized_df = create_normalize_df(backtest_df=backtest_df,
+                                                method=method,
+                                                look_back_period=look_back_period,
+                                                volatility_filter=volatility_filter)
+            if middle_signal == None:
+                middle = sf(normalized_df['signal'].mean(), 4)
+            else:
+                middle = middle_signal
+
+
+            result_dict, df = backtest_time_bound(normalized_df,
+                                                  time_bound = time_bound,
+                                                  long_short = long_short,
+                                                  is_long_ex_mid = is_long_ex_mid,
+                                                  is_stop_loss = is_stop_loss,
+                                                  middle_signal = middle,
+                                                  unit_tc = unit_tc)
+
+
+
+            result_dict['middle_signal'] = middle
+            result_dict['time_bound'] = time_bound
+            result_dict['look_back_period'] = look_back_period
+            logger.info(
