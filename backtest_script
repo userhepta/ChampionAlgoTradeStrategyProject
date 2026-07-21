@@ -453,4 +453,18 @@ def create_time_stop_lookback_entry_optimization_df(backtest_df,
             result_dict['middle_signal'] = middle
             result_dict['time_bound'] = time_bound
             result_dict['look_back_period'] = look_back_period
-            logger.info(
+            logger.info('last backtest: time bound = {}, look back period = {}', time_bound, look_back_period)
+            result_list.append(result_dict)
+
+    result_df = pd.DataFrame(result_list)
+    return result_df
+
+def plot_heatamp(result_df, method, long_short, is_save = False):
+    opt_df_param_as_string = result_df[['time_bound', 'look_back_period', 'metric']]
+    param_heatmap_table = opt_df_param_as_string.pivot(index='time_bound', columns='look_back_period',
+                                                       values='metric')
+    fig, ax = plt.subplots(figsize=(16, 9))
+    sns.heatmap(param_heatmap_table, cmap=sns.cubehelix_palette(rot=-0.5, light=0.92, dark=0.02, reverse=True, as_cmap=True), annot=True, fmt=".2f", ax=ax)
+    try:
+        side = 'long' if long_short == 1 else 'short'
+        title =
