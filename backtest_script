@@ -467,4 +467,18 @@ def plot_heatamp(result_df, method, long_short, is_save = False):
     sns.heatmap(param_heatmap_table, cmap=sns.cubehelix_palette(rot=-0.5, light=0.92, dark=0.02, reverse=True, as_cmap=True), annot=True, fmt=".2f", ax=ax)
     try:
         side = 'long' if long_short == 1 else 'short'
-        title =
+        title = f"{MODEL_DICT.get(method)} ({side})"
+        ax.set_title(title)
+    except:
+        pass
+    plt.savefig(f"heatmap/{title}.png")
+    plt.show()
+
+
+def plot_equity_curve(time_bound_df, is_save = False):
+    ax = time_bound_df[['cumulative_pnl', 'cumulative_net_pnl']].plot(figsize=(12, 6))
+    try:
+        side = 'long' if long_short == 1 else 'short'
+        title = f"{MODEL_DICT.get(method)} ({side})"
+        ax.set_title(title)
+        plt.savefig(f"equity_curve/{title}.png")
