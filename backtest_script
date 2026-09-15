@@ -482,3 +482,33 @@ def plot_equity_curve(time_bound_df, is_save = False):
         title = f"{MODEL_DICT.get(method)} ({side})"
         ax.set_title(title)
         plt.savefig(f"equity_curve/{title}.png")
+    except:
+        pass
+
+    # Optional: label axes
+    ax.set_xlabel("Time")
+    ax.set_ylabel("PnL")
+
+
+
+
+
+# 🔹 6. Example usage
+if __name__ == "__main__":
+
+    # Replace with your actual file path
+    xauusd_file_path = "xxxx.csv"
+
+    # Read the CSV file
+    df_xau_raw = pd.read_csv(xauusd_file_path, parse_dates=["datetime"])
+
+    df_xau_raw = df_xau_raw.set_index('datetime')
+    df_xau_raw['return'] = df_xau_raw['close'].pct_change() * 66.67
+
+    # Replace with your actual file path
+    event_path = "xxxx.xlsx"
+
+    # If your data is in the first sheet:
+    df_event = pd.read_excel(event_path)
+    df_event['datetime'] = pd.to_datetime(
+        df_event['Date'].astype(str) + ' ' + df_event['Time'].astype(str)) - 
