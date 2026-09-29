@@ -595,4 +595,20 @@ if __name__ == "__main__":
 
 
         normalized_df = create_normalize_df(backtest_df= backtest_df, method =method, look_back_period = look_back_period, volatility_filter =volatility_filter)
-        middle = sf(normalized_df['
+        middle = sf(normalized_df['signal'].mean(), 4) if middle_signal == None else sf(model_dict.get(method), 4)
+
+        result_dict, time_bound_df = backtest_time_bound(normalized_df,
+                                                         time_bound = time_bound,
+                                                         long_short = long_short,
+                                                         is_long_ex_mid = is_long_ex_mid,
+                                                         is_stop_loss = is_stop_loss,
+                                                         middle_signal = middle,
+                                                         unit_tc = 0.0075)
+
+        plot_equity_curve(time_bound_df)
+        strategy_list = []
+        strategy_list.append(middle)
+        strategy_list.append(look_back_period)
+        strategy_list.append(time_bound)
+        for key, value in result_dict.items():
+            print(f"{key}: {value}")
