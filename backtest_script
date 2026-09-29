@@ -511,4 +511,19 @@ if __name__ == "__main__":
     # If your data is in the first sheet:
     df_event = pd.read_excel(event_path)
     df_event['datetime'] = pd.to_datetime(
-        df_event['Date'].astype(str) + ' ' + df_event['Time'].astype(str)) - 
+        df_event['Date'].astype(str) + ' ' + df_event['Time'].astype(str)) - pd.Timedelta(minutes=1+4)
+    df_event = df_event.set_index('datetime')
+    df_event['is_announ'] = True
+    df_event = df_event[['is_announ']].copy()
+
+    df_joined = df_xau_raw.join(df_event, how='left')
+    df_joined['is_announ'] = df_joined['is_announ'].fillna(False)
+    df_joined['event_id'] = df_joined['is_announ'].cumsum()
+
+    hour_before = 17.95
+    hour_after = 2
+
+    # plot_pre_post_hr_df(hour_before, hour_after)
+
+    df_joined['announ_time'] = np.where(df_joined['is_announ'] == True, df_joined.index, pd.NaT)
+    df_joined['announ_time'] = df_joined['announ_time'].
