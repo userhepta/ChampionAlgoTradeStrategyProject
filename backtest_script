@@ -573,7 +573,26 @@ if __name__ == "__main__":
     for method, middle_signal in model_dict.items():
         middle_signal = None
         result_df = create_time_stop_lookback_entry_optimization_df(backtest_df,
-                                                                    lookback_range=[1010, 1035],
+                                                                    lookback_range =[1010, 1035],
                                                                     time_stop_range = [30, 50],
                                                                     long_short = long_short,
-                                                                    is_long_ex_mid = 
+                                                                    is_long_ex_mid = is_long_ex_mid,
+                                                                    middle_signal = middle_signal,
+                                                                    is_stop_loss = is_stop_loss,
+                                                                    method = method,
+                                                                    volatility_filter = volatility_filter,
+                                                                    unit_tc = 0.0075)
+        opt_df_sorted = result_df.sort_values('metric', ascending=False)
+
+        plot_heatamp(result_df, method, long_short, True)
+        print(opt_df_sorted.iloc[0])
+
+        method = 'rsi'
+        long_short = -1
+        look_back_period = 1017
+        time_bound = 41
+        # middle_signal = None
+
+
+        normalized_df = create_normalize_df(backtest_df= backtest_df, method =method, look_back_period = look_back_period, volatility_filter =volatility_filter)
+        middle = sf(normalized_df['
