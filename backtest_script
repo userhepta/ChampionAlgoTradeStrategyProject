@@ -612,3 +612,9 @@ if __name__ == "__main__":
         strategy_list.append(time_bound)
         for key, value in result_dict.items():
             print(f"{key}: {value}")
+            strategy_list.append(value)
+        print(f"middle_signal: {middle}")
+        print(f"look_back: {look_back_period}")
+        print(f"time_bound: {time_bound}")
+
+        print(*strategy_list, sep=", ")
