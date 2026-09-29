@@ -557,4 +557,23 @@ if __name__ == "__main__":
 
     long_short = -1
     is_long_ex_mid = False
-    volatility_filter =
+    volatility_filter = None
+    is_stop_loss = False
+
+    model_dict = {
+        'z': 0,
+        'mean': 0,
+        'rb': 0,
+        'rsi': 50,
+        'mm': 0.5,
+        'pctl': 0.5,
+        'rbz': 0
+    }
+
+    for method, middle_signal in model_dict.items():
+        middle_signal = None
+        result_df = create_time_stop_lookback_entry_optimization_df(backtest_df,
+                                                                    lookback_range=[1010, 1035],
+                                                                    time_stop_range = [30, 50],
+                                                                    long_short = long_short,
+                                                                    is_long_ex_mid = 
