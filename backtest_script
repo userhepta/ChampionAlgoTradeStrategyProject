@@ -545,4 +545,16 @@ if __name__ == "__main__":
     mom_buffer_min = 0
 
     df_joined['is_trade'] = np.where(df_joined['is_announ'].shift(1+mom_buffer_min)==True, True,
-                                     np.where(df_joined['is_announ'].shift(round(hour_after*60))==True, False,
+                                     np.where(df_joined['is_announ'].shift(round(hour_after*60))==True, False, np.nan))
+    df_joined['is_trade'] = df_joined['is_trade'].ffill()
+
+    df_joined['is_trade_start'] = np.where(df_joined['is_announ'].shift(1+mom_buffer_min) == True, True, False)
+    df_joined['trade_id'] = df_joined['is_trade_start'].cumsum()
+
+    backtest_df = filter_pre_post_hr_to_backtest_df(df_joined=df_joined, hour_before=hour_before, hour_after=hour_after)
+
+    median_abs_pct_dict, mean_abs_pct_dict = create_x_min_since_abs_pct_dict(quantile=0.75, minutes_after = int(hour_after*60))
+
+    long_short = -1
+    is_long_ex_mid = False
+    volatility_filter =
