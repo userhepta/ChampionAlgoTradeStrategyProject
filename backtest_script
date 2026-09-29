@@ -526,4 +526,13 @@ if __name__ == "__main__":
     # plot_pre_post_hr_df(hour_before, hour_after)
 
     df_joined['announ_time'] = np.where(df_joined['is_announ'] == True, df_joined.index, pd.NaT)
-    df_joined['announ_time'] = df_joined['announ_time'].
+    df_joined['announ_time'] = df_joined['announ_time'].ffill()
+    df_joined['min_since_announ'] = (pd.to_datetime(df_joined.index) - pd.to_datetime(
+        df_joined['announ_time'])).dt.total_seconds() / 60
+    df_joined = df_joined.drop(columns=['announ_time'])
+
+    df_joined['announ_time'] = np.where(df_joined['is_announ'] == True, df_joined.index, pd.NaT)
+    df_joined['announ_time'] = df_joined['announ_time'].bfill()
+    df_joined['min_before_announ'] = (pd.to_datetime(df_joined['announ_time']) - pd.to_datetime(
+        df_joined.index)).dt.total_seconds() / 60
+    df_joined = df_joined.drop(columns=['announ_time'])
