@@ -536,3 +536,13 @@ if __name__ == "__main__":
     df_joined['min_before_announ'] = (pd.to_datetime(df_joined['announ_time']) - pd.to_datetime(
         df_joined.index)).dt.total_seconds() / 60
     df_joined = df_joined.drop(columns=['announ_time'])
+
+    df_joined['announ_close'] = np.where(df_joined['is_announ'] == True, df_joined['close'], np.nan)
+    df_joined['announ_close'] = df_joined['announ_close'].ffill()
+    df_joined['pct_since_announ'] = df_joined['close'] / df_joined['announ_close'] - 1
+    df_joined = df_joined.drop(columns=['announ_close'])
+
+    mom_buffer_min = 0
+
+    df_joined['is_trade'] = np.where(df_joined['is_announ'].shift(1+mom_buffer_min)==True, True,
+                                     np.where(df_joined['is_announ'].shift(round(hour_after*60))==True, False,
