@@ -29,4 +29,17 @@ df_intraday = df_intraday.reset_index()
 # Generate the datetime of the last row data
 df_intraday["last_datetime"] = df_intraday["datetime"].shift(1)
 # Generate the time difference between the current row and the last row
-df_intraday["datetime_diff_from_last"] = df_intraday["datetime"] - df_intraday["last_datetime
+df_intraday["datetime_diff_from_last"] = df_intraday["datetime"] - df_intraday["last_datetime"]
+
+# Generate the datetime of the next row data
+df_intraday["next_datetime"] = df_intraday["datetime"].shift(-1)
+# Generate the time difference between the next row and the current row
+df_intraday["datetime_diff_to_next"] = df_intraday["next_datetime"] - df_intraday["datetime"]
+
+df_test = df_intraday["datetime_diff_from_last"].value_counts(normalize=True)
+df_test = df_test.mul(100).round(3).astype(str) + "%"
+print(df_test)
+
+df_datetime_diff_count = df_intraday["datetime_diff_from_last"].value_counts()
+df_test1 = df_datetime_diff_count.sort_index().reset_index()
+df_test2
