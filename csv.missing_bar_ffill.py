@@ -42,4 +42,8 @@ print(df_test)
 
 df_datetime_diff_count = df_intraday["datetime_diff_from_last"].value_counts()
 df_test1 = df_datetime_diff_count.sort_index().reset_index()
-df_test2
+df_test2 = df_test1[df_test1["datetime_diff_from_last"] < "0 days 00:25:00"].copy()
+
+df_test3 = df_intraday[df_intraday["datetime_diff_from_last"] == df_test2.iloc[0]['datetime_diff_from_last']].sample(6)
+
+rows_to_drop_lists_list = list(range(5111101, 5111161)), list(range(5464015, 5464075)), list(range(4802193, 4802253)), list(range(4447640, 4447700)), list(range(4089935, 4089995)), list(range(3737375, 3737435))
