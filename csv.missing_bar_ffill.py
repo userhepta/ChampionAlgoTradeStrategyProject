@@ -52,4 +52,14 @@ for rows_to_drop_list in rows_to_drop_lists_list:
 
 start_datetime = pd.to_datetime(df_intraday["datetime"].min(), format="%Y-%m-%d %H:%M:%S")
 end_datetime = pd.to_datetime(df_intraday["datetime"].max(), format="%Y-%m-%d %H:%M:%S")
-datetime_range = pd.date_range(start=start_datetime, end=end_datetime, freq="min
+datetime_range = pd.date_range(start=start_datetime, end=end_datetime, freq="min")
+df_all_datetime = pd.DataFrame({"datetime": datetime_range})
+
+print("df_all_datetime.shape: ", df_all_datetime.shape)
+print("df_intraday.shape: ", df_intraday.shape)
+df_intraday_all = df_intraday.merge(df_all_datetime, on="datetime", how="outer")
+df_intraday_all.sort_values("datetime", inplace=True)
+print("df_intraday_all.shape: ", df_intraday_all.shape)
+
+df_intraday_all["datetime_diff_to_next"] = df_intraday_all["datetime_diff_to_next"].ffill()
+df_intraday_all["close"
