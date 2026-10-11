@@ -47,3 +47,9 @@ df_test2 = df_test1[df_test1["datetime_diff_from_last"] < "0 days 00:25:00"].cop
 df_test3 = df_intraday[df_intraday["datetime_diff_from_last"] == df_test2.iloc[0]['datetime_diff_from_last']].sample(6)
 
 rows_to_drop_lists_list = list(range(5111101, 5111161)), list(range(5464015, 5464075)), list(range(4802193, 4802253)), list(range(4447640, 4447700)), list(range(4089935, 4089995)), list(range(3737375, 3737435))
+for rows_to_drop_list in rows_to_drop_lists_list:
+    df_intraday = df_intraday.drop(rows_to_drop_list)
+
+start_datetime = pd.to_datetime(df_intraday["datetime"].min(), format="%Y-%m-%d %H:%M:%S")
+end_datetime = pd.to_datetime(df_intraday["datetime"].max(), format="%Y-%m-%d %H:%M:%S")
+datetime_range = pd.date_range(start=start_datetime, end=end_datetime, freq="min
